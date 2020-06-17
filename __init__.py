@@ -1,5 +1,14 @@
-import bpy
 from pathlib import Path
+import bpy
+import os
+import sys
+import re
+
+internal_blend = re.compile('\w+\.blend')
+current_dir = os.path.dirname(internal_blend.split(__file__)[0])
+sys.path.append(current_dir)
+
+from fountain import Fountain
 
 class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
     '''Unfurl foutain to text strips'''
@@ -17,7 +26,9 @@ class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
         except AttributeError: return False
 
     def execute(self, context):
-        print('xxxyttt!')
+        sys.path.append(os.path.dirname(__file__))
+        from .fountain import Fountain
+        print('xxxyttt!', Fountain)
         return {"FINISHED"}
     
 
