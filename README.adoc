@@ -2,4 +2,3 @@
 
 A minimalist take on https://github.com/tin2tin[tin2tin]'s https://github.com/tin2tin/Blender_Screenwriter[ `text.scenes_to_strips` operator ]
 
-
