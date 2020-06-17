@@ -26,9 +26,13 @@ class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
         except AttributeError: return False
 
     def execute(self, context):
-        sys.path.append(os.path.dirname(__file__))
-        from .fountain import Fountain
-        print('xxxyttt!', Fountain)
+        fountain_script = bpy.context.area.spaces.active.text.as_string()
+        if fountain_script.strip() == "": return {"CANCELLED"}
+        F = Fountain(fountain_script)
+
+        for fc, f in enumerate(F.elements):
+            print(fc, f.element_type)
+
         return {"FINISHED"}
     
 
