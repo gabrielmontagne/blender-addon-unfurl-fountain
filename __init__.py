@@ -101,9 +101,29 @@ def lay_out_scenes(scenes):
     for i, s in enumerate(scenes):
         total = 0
         for e in s.elements:
-            total += e.seconds
+
+            start = total
+            end = total + e.seconds
+
+            element_type = type(e)
+
+            if element_type is Dialogue:
+                strip = create_strip(
+                    channel + 1,
+                    start + next,
+                    end + next,
+                    '{}: {}'.format(e.character, e.text)
+                )
+                strip.location.y = 0.5
+
+            elif element_type is Action:
+                strip = create_strip(channel + 2, start + next, end + next, e.text)
+                strip.location.y = 0.1
+
+            total = end
 
         end = next + total
+
         strip = create_strip(channel, next, next + total, s.name)
         strip.location.y = 0.9
         print(i, s.name, total, seconds_to_frames(total), strip)
