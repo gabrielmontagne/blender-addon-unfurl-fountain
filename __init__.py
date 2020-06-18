@@ -1,3 +1,5 @@
+"""Based on code by tin2tin, https://github.com/tin2tin/Blender_Screenwriter"""
+
 from collections import namedtuple
 from math import ceil
 from pathlib import Path
@@ -5,6 +7,7 @@ import bpy
 import os
 import re
 import sys
+
 
 bl_info = {
     'name': 'Unfurn Fountain to VSE text strips',
@@ -38,31 +41,25 @@ def text_to_seconds(text):
     return max(min_text_length, round(words / words_per_second + line_break_seconds * text.count('\n'), 2))
 
 def find_empty_channel():
-
     context = bpy.context
 
     if not context.scene.sequence_editor:
         context.scene.sequence_editor_create()
 
     sequences = context.sequences
-
     if not sequences:
         return 1
 
     channels = [s.channel for s in sequences]
     channels = sorted(list(set(channels)))
-
     return channels[-1] + 1
 
 def seconds_to_frames(seconds):
-
     render = bpy.context.scene.render
     return ceil((render.fps / render.fps_base) * seconds)
 
 def to_scenes(script):
-
     F = Fountain(script)
-
     scenes = []
 
     current_scene = None
@@ -70,7 +67,6 @@ def to_scenes(script):
     current_parenthetical = ''
 
     for fc, f in enumerate(F.elements):
-
         element_type = f.element_type
         text = f.element_text.strip()
 
@@ -106,14 +102,13 @@ def to_scenes(script):
     return scenes
 
 def lay_out_scenes(scenes):
-
     next = 0
     channel = find_empty_channel()
 
     for i, s in enumerate(scenes):
         total = scene_padding_seconds
-        for e in s.elements:
 
+        for e in s.elements:
             start = total
             end = total + e.seconds
 
@@ -154,7 +149,6 @@ def lay_out_scenes(scenes):
     bpy.ops.sequencer.set_range_to_strips()
 
 def create_strip(channel, start, end, text):
-
     frame_start = seconds_to_frames(start)
     frame_end = seconds_to_frames(end)
 
