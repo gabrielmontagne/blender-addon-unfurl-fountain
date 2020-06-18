@@ -13,8 +13,10 @@ sys.path.append(current_dir)
 from fountain import Fountain
 
 spaces = re.compile(r'\s+')
-words_per_second = 2
-line_break_seconds = 0.4
+words_per_second = 2.5
+min_text_length = 1.5
+line_break_seconds = 0.3
+scene_padding_seconds = 1
 
 Scene = namedtuple('Scene', ['name', 'elements'])
 Element = namedtuple('Element', ['type', 'seconds', 'text'])
@@ -23,7 +25,7 @@ Action = namedtuple('Action', ['seconds', 'text'])
 
 def text_to_seconds(text):
     words = len(spaces.split(text))
-    return round(words / words_per_second + line_break_seconds * text.count('\n'), 2)
+    return max(min_text_length, round(words / words_per_second + line_break_seconds * text.count('\n'), 2))
 
 def find_empty_channel():
 
@@ -78,7 +80,7 @@ def to_scenes(script):
             current_parenthetical = ''
 
         elif element_type == 'Dialogue':
-            seconds = text_to_seconds(text)
+            seconds = text_to_seconds(text) * 1.3
             current_scene.elements.append(
                 Dialogue(
                 seconds,
@@ -99,7 +101,7 @@ def lay_out_scenes(scenes):
     channel = find_empty_channel()
 
     for i, s in enumerate(scenes):
-        total = 0
+        total = scene_padding_seconds
         for e in s.elements:
 
             start = total
@@ -114,19 +116,24 @@ def lay_out_scenes(scenes):
                     end + next,
                     '{}: {}'.format(e.character, e.text)
                 )
-                strip.location.y = 0.5
+
+                strip.location.y = 0.1
+                strip.align_y = 'BOTTOM'
 
             elif element_type is Action:
                 strip = create_strip(channel + 2, start + next, end + next, e.text)
-                strip.location.y = 0.1
+
+                strip.location.y = 0.5
+                strip.align_y = 'CENTER'
 
             total = end
 
+        total += scene_padding_seconds
         end = next + total
 
         strip = create_strip(channel, next, next + total, s.name)
         strip.location.y = 0.9
-        print(i, s.name, total, seconds_to_frames(total), strip)
+        strip.align_y = 'TOP'
         next = end
 
     bpy.ops.sequencer.set_range_to_strips()
