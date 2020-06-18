@@ -6,6 +6,15 @@ import os
 import re
 import sys
 
+bl_info = {
+    'name': 'Unfurn Fountain to VSE text strips',
+    'author': 'gabriel montagné, gabriel@tibas.london',
+    'version': (0, 0, 1),
+    'blender': (2, 80, 0),
+    'description': 'Unfurl fountain scripts to VSE text strips',
+    'tracker_url': 'https://github.com/gabrielmontagne/blender-addon-unfurl-fountain/issues'
+}
+
 internal_blend = re.compile('\w+\.blend')
 current_dir = os.path.dirname(internal_blend.split(__file__)[0])
 sys.path.append(current_dir)
@@ -14,6 +23,7 @@ from fountain import Fountain
 
 spaces = re.compile(r'\s+')
 words_per_second = 2.5
+text_speed_factor = 1.2
 min_text_length = 1.5
 line_break_seconds = 0.3
 scene_padding_seconds = 1
@@ -77,10 +87,9 @@ def to_scenes(script):
 
         elif element_type == 'Character':
             current_char = text
-            current_parenthetical = ''
 
         elif element_type == 'Dialogue':
-            seconds = text_to_seconds(text) * 1.3
+            seconds = text_to_seconds(text) * text_speed_factor
             current_scene.elements.append(
                 Dialogue(
                 seconds,
@@ -88,6 +97,7 @@ def to_scenes(script):
                 current_parenthetical,
                 text
             ))
+            current_parenthetical = ''
 
         elif current_scene and element_type == 'Action':
             seconds = text_to_seconds(text)
@@ -114,8 +124,13 @@ def lay_out_scenes(scenes):
                     channel + 1,
                     start + next,
                     end + next,
-                    '{}: {}'.format(e.character, e.text)
+                    '{}{}: {}'.format(e.character, (
+                        e.parenthetical and ' ' + e.parenthetical),
+                        e.text)
                 )
+
+                if e.parenthetical:
+                    print(s.name, e.text, e.parenthetical)
 
                 strip.location.y = 0.1
                 strip.align_y = 'BOTTOM'
@@ -137,7 +152,6 @@ def lay_out_scenes(scenes):
         next = end
 
     bpy.ops.sequencer.set_range_to_strips()
-    print('channel', channel)
 
 def create_strip(channel, start, end, text):
 
@@ -201,14 +215,13 @@ classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips)
 
 def register():
     from bpy.utils import register_class
-
-    print('registering')
-
     for cls in classes :
         register_class(cls)
 
 def unregister():
-    print('un-registering')
+    from bpy.utils import unregister_class
+    for cls in classes :
+        unregister_class(cls)
 
 if __name__ == '__main__':
     register()
