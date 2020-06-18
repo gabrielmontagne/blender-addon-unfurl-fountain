@@ -7,10 +7,13 @@ To use, click on the `Unfurl fountain to strips` button on the text editor for a
 
 image::screenshot.png[Screenshot]
 
+Works nicely with the https://github.com/tin2tin/Blender_Screenwriter/blob/master/README.md[Screenwriter] addon, for writing,
+, as well as with the Power Sequencer, for nesting strips into new scenes. https://www.gdquest.com/docs/power-sequencer/[Power Sequencer]
+
 == About
 
-Based on work from 
+Based on work from
 https://github.com/tin2tin[tin2tin]
-and, as https://github.com/tin2tin/Blender_Screenwriter/blob/master/README.md[he explains], 
+and, as https://github.com/tin2tin/Blender_Screenwriter/blob/master/README.md[he explains],
 [quote, tin2tin]
-The Fountain screenplay format is by Nima Yousefi & John August; original code for Objective-C at https://github.com/nyousefi/Fountain. It is ported to Python 3 by Colton J. Provias, improved by Manuel Senfft https://github.com/Tagirijus/fountain. 
+The Fountain screenplay format is by Nima Yousefi & John August; original code for Objective-C at https://github.com/nyousefi/Fountain. It is ported to Python 3 by Colton J. Provias, improved by Manuel Senfft https://github.com/Tagirijus/fountain.
