@@ -8,7 +8,9 @@ To use, click on the `Unfurl fountain to strips` button on the text editor for a
 image::screenshot.png[Screenshot]
 
 Works nicely with the https://github.com/tin2tin/Blender_Screenwriter/blob/master/README.md[Screenwriter] addon, for writing,
-, as well as with the Power Sequencer, for nesting strips into new scenes. https://www.gdquest.com/docs/power-sequencer/[Power Sequencer]
+, as well as with the Power Sequencer, for nesting strips into new scenes. https://www.gdquest.com/docs/power-sequencer#power_sequencer.scene_create_from_selection[Power Sequencer]
+
+My workflow is: write in Screenwriter + external editors, create the text strips using this addon, stretch and move things around, then, when you're ready, select strips from a scene and `Create Scene from Selection` to start doing basic layout and GP sketches.
 
 == About
 
