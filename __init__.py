@@ -32,7 +32,6 @@ line_break_seconds = 0.3
 scene_padding_seconds = 1
 
 Scene = namedtuple('Scene', ['name', 'elements'])
-Element = namedtuple('Element', ['type', 'seconds', 'text'])
 Dialogue = namedtuple('Dialogue', ['seconds', 'character', 'parenthetical', 'text'])
 Action = namedtuple('Action', ['seconds', 'text'])
 
