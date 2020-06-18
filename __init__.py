@@ -1,8 +1,10 @@
+from collections import namedtuple
+from math import ceil
 from pathlib import Path
 import bpy
 import os
-import sys
 import re
+import sys
 
 internal_blend = re.compile('\w+\.blend')
 current_dir = os.path.dirname(internal_blend.split(__file__)[0])
@@ -11,12 +13,125 @@ sys.path.append(current_dir)
 from fountain import Fountain
 
 spaces = re.compile(r'\s+')
-words_per_second = 0.7
+words_per_second = 2
 line_break_seconds = 0.4
+
+Scene = namedtuple('Scene', ['name', 'elements'])
+Element = namedtuple('Element', ['type', 'seconds', 'text'])
+Dialogue = namedtuple('Dialogue', ['seconds', 'character', 'parenthetical', 'text'])
+Action = namedtuple('Action', ['seconds', 'text'])
 
 def text_to_seconds(text):
     words = len(spaces.split(text))
-    return words_per_second * words + line_break_seconds * text.count('\n')
+    return round(words / words_per_second + line_break_seconds * text.count('\n'), 2)
+
+def find_empty_channel():
+
+    context = bpy.context
+
+    if not context.scene.sequence_editor:
+        context.scene.sequence_editor_create()
+
+    sequences = context.sequences
+
+    if not sequences:
+        return 1
+
+    channels = [s.channel for s in sequences]
+    channels = sorted(list(set(channels)))
+
+    return channels[-1] + 1
+
+def seconds_to_frames(seconds):
+
+    render = bpy.context.scene.render
+    return ceil((render.fps / render.fps_base) * seconds)
+
+def to_scenes(script):
+
+    F = Fountain(script)
+
+    scenes = []
+
+    current_scene = None
+    current_char = None
+    current_parenthetical = ''
+
+    for fc, f in enumerate(F.elements):
+
+        element_type = f.element_type
+        text = f.element_text.strip()
+
+        if element_type == 'Scene Heading':
+            name = f.original_content.strip()
+            current_scene = Scene(name, [])
+            scenes.append(current_scene)
+
+        elif not current_scene:
+            continue
+
+        elif element_type == 'Parenthetical':
+            current_parenthetical = text
+
+        elif element_type == 'Character':
+            current_char = text
+            current_parenthetical = ''
+
+        elif element_type == 'Dialogue':
+            seconds = text_to_seconds(text)
+            current_scene.elements.append(
+                Dialogue(
+                seconds,
+                current_char,
+                current_parenthetical,
+                text
+            ))
+
+        elif current_scene and element_type == 'Action':
+            seconds = text_to_seconds(text)
+            current_scene.elements.append(Action(seconds, text))
+
+    return scenes
+
+def lay_out_scenes(scenes):
+
+    next = 0
+    channel = find_empty_channel()
+
+    for i, s in enumerate(scenes):
+        total = 0
+        for e in s.elements:
+            total += e.seconds
+
+        end = next + total
+        strip = create_strip(channel, next, next + total, s.name)
+        strip.location.y = 0.9
+        print(i, s.name, total, seconds_to_frames(total), strip)
+        next = end
+
+    bpy.ops.sequencer.set_range_to_strips()
+    print('channel', channel)
+
+def create_strip(channel, start, end, text):
+
+    frame_start = seconds_to_frames(start)
+    frame_end = seconds_to_frames(end)
+
+    strip = bpy.context.scene.sequence_editor.sequences.new_effect(
+        name=text,
+        type='TEXT',
+        channel=channel,
+        frame_start=frame_start,
+        frame_end=frame_end
+    )
+
+    strip.font_size = int(bpy.context.scene.render.resolution_y/18)
+    strip.use_shadow = True
+    strip.select= True
+    strip.wrap_width = 0.85
+    strip.text = text
+    strip.blend_type = 'ALPHA_OVER'
+    return strip
 
 class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
     '''Unfurl foutain to text strips'''
@@ -34,20 +149,12 @@ class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
         except AttributeError: return False
 
     def execute(self, context):
-        
-        fountain_script = bpy.context.area.spaces.active.text.as_string()
-        if fountain_script.strip() == "": return {"CANCELLED"}
-        F = Fountain(fountain_script)
 
-        render = context.scene.render
-        fps = round((render.fps / render.fps_base), 3)
+        script = bpy.context.area.spaces.active.text.as_string()
+        if script.strip() == "": return {"CANCELLED"}
 
-        for fc, f in enumerate(F.elements):
-            if f.element_type != 'Dialogue': continue
-            text = f.element_text.strip()
-            print(text, round(text_to_seconds(text), 3))
-
-        print('fps', fps)
+        scenes = to_scenes(script)
+        lay_out_scenes(scenes)
 
         return {"FINISHED"}
 
@@ -75,7 +182,6 @@ def register():
 
 def unregister():
     print('un-registering')
-
 
 if __name__ == '__main__':
     register()
