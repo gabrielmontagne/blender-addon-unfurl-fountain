@@ -25,7 +25,7 @@ sys.path.append(current_dir)
 from fountain import Fountain
 
 spaces = re.compile(r'\s+')
-words_per_second = 2.5
+words_per_second = 3.75
 text_speed_factor = 1.2
 min_text_length = 1.5
 line_break_seconds = 0.3
@@ -112,7 +112,6 @@ def lay_out_scenes(scenes):
             end = total + e.seconds
 
             element_type = type(e)
-
             if element_type is Dialogue:
                 strip = create_strip(
                     channel + 1,
@@ -123,15 +122,11 @@ def lay_out_scenes(scenes):
                         e.text)
                 )
 
-                if e.parenthetical:
-                    print(s.name, e.text, e.parenthetical)
-
                 strip.location.y = 0.1
                 strip.align_y = 'BOTTOM'
 
             elif element_type is Action:
                 strip = create_strip(channel + 2, start + next, end + next, e.text)
-
                 strip.location.y = 0.5
                 strip.align_y = 'CENTER'
 
