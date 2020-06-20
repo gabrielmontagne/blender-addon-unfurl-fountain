@@ -175,6 +175,15 @@ class UNFURL_FOUNTAIN_OT_strips_to_markers(bpy.types.Operator):
 
         return {'FINISHED'}
     
+class UNFURL_FOUNTAIN_OT_clear_markers(bpy.types.Operator):
+    '''Mark timeline from strips'''
+    bl_idname = "unfurl.clear_markers"
+    bl_label = "Clear timeline markers"
+
+    def execute(self, context):
+        context.scene.timeline_markers.clear()
+        return { 'FINISHED' }
+
 
 class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
     '''Unfurl foutain to text strips'''
@@ -214,8 +223,10 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
         row.operator("unfurl.fountain_to_strips")
         row = layout.row(align=True)
         row.operator("unfurl.strips_to_markers")
+        row = layout.row(align=True)
+        row.operator("unfurl.clear_markers")
 
-classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers)
+classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers)
 
 def register():
     from bpy.utils import register_class
