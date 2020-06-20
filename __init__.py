@@ -162,6 +162,20 @@ def create_strip(channel, start, end, text):
     strip.blend_type = 'ALPHA_OVER'
     return strip
 
+class UNFURL_FOUNTAIN_OT_strips_to_markers(bpy.types.Operator):
+    '''Mark timeline from strips'''
+    bl_idname = "unfurl.strips_to_markers"
+    bl_label = "Mark timeline from strips"
+
+    def execute(self, context):
+        selected_frames = {s.frame_start for s in context.scene.sequence_editor.sequences_all if s.select}
+        timeline_markers = context.scene.timeline_markers
+        for frame in selected_frames:
+            timeline_markers.new(name='F_{}'.format(frame), frame=frame)
+
+        return {'FINISHED'}
+    
+
 class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
     '''Unfurl foutain to text strips'''
     bl_idname = "unfurl.fountain_to_strips"
@@ -198,8 +212,10 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
         layout = self.layout
         row = layout.row(align=True)
         row.operator("unfurl.fountain_to_strips")
+        row = layout.row(align=True)
+        row.operator("unfurl.strips_to_markers")
 
-classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips)
+classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers)
 
 def register():
     from bpy.utils import register_class
