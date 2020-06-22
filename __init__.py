@@ -140,8 +140,6 @@ def lay_out_scenes(scenes):
         strip.align_y = 'TOP'
         next = end
 
-    bpy.ops.sequencer.set_range_to_strips()
-
 def create_strip(channel, start, end, text):
     frame_start = seconds_to_frames(start)
     frame_end = seconds_to_frames(end)
