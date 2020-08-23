@@ -222,6 +222,34 @@ class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
 
         return {"FINISHED"}
 
+class UNFURL_FOUNTAIN_OT_specific_to_strips(bpy.types.Operator):
+    '''Unfurl specific foutain to text strips'''
+    bl_idname = "unfurl.fountain_specific_to_strips"
+    bl_label = "Unfurl specific foutain to strips"
+
+    text: StringProperty(name='File to process')
+
+    def execute(self, context):
+
+        if not self.text: return {"CANCELLED"}
+
+        file = bpy.data.texts.get(self.text)
+
+        if not file:
+            return {"CANCELLED"}
+
+
+        script = file.as_string()
+        if script.strip() == "": return {"CANCELLED"}
+
+        scenes = to_scenes(script)
+        lay_out_scenes(scenes)
+
+        return {"FINISHED"}
+
+
+
+
 class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
     """Unfurl fountain controls"""
     bl_label = "Unfurl fountain"
@@ -240,7 +268,7 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
         row = layout.row(align=True)
         row.prop(context.scene, 'unfurl_channel')
 
-classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers)
+classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers)
 
 def register():
 
