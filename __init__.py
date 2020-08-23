@@ -7,10 +7,12 @@ import bpy
 import os
 import re
 import sys
+from bpy.props import IntProperty, StringProperty
+from bpy.types import SequenceEditor, Scene
 
 
 bl_info = {
-    'name': 'Unfurn Fountain to VSE text strips',
+    'name': 'Unfurl Fountain to VSE text strips',
     'author': 'gabriel montagné, gabriel@tibas.london',
     'version': (0, 0, 1),
     'blender': (2, 80, 0),
@@ -42,10 +44,25 @@ def text_to_seconds(text):
 def find_empty_channel():
     context = bpy.context
 
+    scene = context.scene
+    unfurl_channel = scene.unfurl_channel
+
+    print('unfurl_channel', unfurl_channel)
+
     if not context.scene.sequence_editor:
         context.scene.sequence_editor_create()
 
     sequences = context.sequences
+
+    if unfurl_channel > 0:
+        print('use channels', unfurl_channel, unfurl_channel + 1, unfurl_channel + 2)
+
+        for_removal [s in sequences if s.channel >= unfurl_channel and s.channel <= unfurl_channel + 2]
+        for s in for_removeal:
+            print('removeing', s)
+            sequences.remove(s)
+
+
     if not sequences:
         return 1
 
@@ -223,13 +240,21 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
         row.operator("unfurl.strips_to_markers")
         row = layout.row(align=True)
         row.operator("unfurl.clear_markers")
+        row = layout.row(align=True)
+        row.prop(context.scene, 'unfurl_channel')
 
 classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers)
 
 def register():
+
+    bpy.types.Scene.unfurl_channel = bpy.props.IntProperty(default=0, min=0)
+
     from bpy.utils import register_class
     for cls in classes :
         register_class(cls)
+
+
+
 
 def unregister():
     from bpy.utils import unregister_class
