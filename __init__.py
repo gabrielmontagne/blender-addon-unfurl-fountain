@@ -47,26 +47,14 @@ def find_empty_channel():
     scene = context.scene
     unfurl_channel = scene.unfurl_channel
 
-    print('unfurl_channel', unfurl_channel)
-
     if not context.scene.sequence_editor:
         context.scene.sequence_editor_create()
 
     sequences = context.scene.sequence_editor.sequences
 
     if unfurl_channel > 0:
-        print('we need to clear out channel', 
-            unfurl_channel, 
-            unfurl_channel + 1, 
-            unfurl_channel + 2, 
-        )
-
         if sequences:
-
             ss = [s for s in sequences if s.channel >= unfurl_channel and s.channel <= unfurl_channel + 2]
-
-            print('Remove sequences on target channels', ss)
-
             for s in ss:
                 sequences.remove(s)
 
