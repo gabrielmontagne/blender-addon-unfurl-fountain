@@ -55,13 +55,11 @@ def find_empty_channel():
     sequences = context.sequences
 
     if unfurl_channel > 0:
-        print('use channels', unfurl_channel, unfurl_channel + 1, unfurl_channel + 2)
-
-        for_removal [s in sequences if s.channel >= unfurl_channel and s.channel <= unfurl_channel + 2]
-        for s in for_removeal:
-            print('removeing', s)
-            sequences.remove(s)
-
+        print('we need to clear out channel', 
+            unfurl_channel, 
+            unfurl_channel + 1, 
+            unfurl_channel + 2, 
+        )
 
     if not sequences:
         return 1
