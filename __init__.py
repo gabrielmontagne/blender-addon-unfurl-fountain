@@ -3,13 +3,16 @@
 from collections import namedtuple
 from math import ceil
 from pathlib import Path
-import bpy
+from shlex import split
+from subprocess import run
 import os
 import re
 import sys
-from bpy.props import IntProperty, StringProperty
-from bpy.types import SequenceEditor, Scene
+import bpy
 
+from bpy.path import abspath
+from bpy.props import IntProperty, StringProperty, BoolProperty
+from bpy.types import SequenceEditor, Scene
 
 bl_info = {
     'name': 'Unfurl Fountain to VSE text strips',
@@ -189,6 +192,51 @@ class UNFURL_FOUNTAIN_OT_match_strip_titles(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class UNFURL_FOUNTAIN_OT_concatenate_text_strips(bpy.types.Operator):
+    '''The text strip from the text strips'''
+    bl_idname = "unfurl.concatenate_text_strips"
+    bl_label = "Concatenate text strips"
+
+    save_target: BoolProperty(name='Save target')
+    target: StringProperty(name='To file')
+    shell_command: StringProperty(name='Command')
+    shell_context: StringProperty(name='CWD', default='//', subtype='DIR_PATH')
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def execute(self, context):
+        result = []
+        if context.selected_sequences:
+            for s in sorted(context.selected_sequences, key=lambda s: (s.frame_final_start, s.channel)):
+                if s.type != 'TEXT': continue
+                result.append(s.text)
+                print('text seq', s.frame_final_start, s.channel, s.name)
+
+        print('result\n', '\n\n'.join(result))
+
+        text_name = self.target.strip()
+        sum = '\n\n'.join(result)
+
+        text = bpy.data.texts.get(text_name)
+        if not text:
+            text = bpy.data.texts.new(text_name)
+
+        text.clear()
+        text.write(sum)
+
+        if self.save_target:
+            filepath = abspath(text.filepath or text.name_full)
+            with open(filepath, 'w') as o:
+                o.write(text.as_string())
+
+        if self.shell_command:
+            r = run(split(self.shell_command), cwd=abspath(self.shell_context))
+
+        return {'FINISHED'}
+
+
 class UNFURL_FOUNTAIN_OT_strips_to_markers(bpy.types.Operator):
     '''Mark timeline from strips'''
     bl_idname = "unfurl.strips_to_markers"
@@ -283,7 +331,7 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
         row = layout.row(align=True)
         row.prop(context.scene, 'unfurl_channel')
 
-classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles)
+classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips)
 
 def register():
 
