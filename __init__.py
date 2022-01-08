@@ -197,7 +197,8 @@ class UNFURL_FOUNTAIN_OT_concatenate_text_strips(bpy.types.Operator):
     bl_idname = "unfurl.concatenate_text_strips"
     bl_label = "Concatenate text strips"
 
-    save_target: BoolProperty(name='Save target')
+    save_target: BoolProperty(name='Save target', default=True)
+    split_dialogues: BoolProperty(name='Split fountain dialogues', default=True)
     target: StringProperty(name='To file')
     shell_command: StringProperty(name='Command')
     shell_context: StringProperty(name='CWD', default='//', subtype='DIR_PATH')
@@ -211,10 +212,11 @@ class UNFURL_FOUNTAIN_OT_concatenate_text_strips(bpy.types.Operator):
         if context.selected_sequences:
             for s in sorted(context.selected_sequences, key=lambda s: (s.frame_final_start, s.channel)):
                 if s.type != 'TEXT': continue
-                result.append(s.text)
-                print('text seq', s.frame_final_start, s.channel, s.name)
+                text = s.text
+                if self.split_dialogues and re.match(r'^[A-Z ]+:', text):
+                    text = '\n'.join([s.strip() for s in text.split(':', 1)])
 
-        print('result\n', '\n\n'.join(result))
+                result.append(text)
 
         text_name = self.target.strip()
         sum = '\n\n'.join(result)
@@ -222,6 +224,8 @@ class UNFURL_FOUNTAIN_OT_concatenate_text_strips(bpy.types.Operator):
         text = bpy.data.texts.get(text_name)
         if not text:
             text = bpy.data.texts.new(text_name)
+
+        print('Completed:\n', sum)
 
         text.clear()
         text.write(sum)
