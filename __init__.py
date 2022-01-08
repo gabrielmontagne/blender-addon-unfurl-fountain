@@ -174,6 +174,21 @@ def create_strip(channel, start, end, text):
     strip.blend_type = 'ALPHA_OVER'
     return strip
 
+class UNFURL_FOUNTAIN_OT_match_strip_titles(bpy.types.Operator):
+    '''Match the text strip titles to their contents'''
+    bl_idname = "unfurl.match_strip_titles"
+    bl_label = "Match text strip titles to their contents"
+
+    def execute(self, context):
+        if context.selected_sequences:
+            for s in context.selected_sequences:
+                if s.type != 'TEXT': continue
+                s.name = re.sub(r'\.', '_', s.text)
+                print('text seq', s.name)
+
+        return {'FINISHED'}
+
+
 class UNFURL_FOUNTAIN_OT_strips_to_markers(bpy.types.Operator):
     '''Mark timeline from strips'''
     bl_idname = "unfurl.strips_to_markers"
@@ -268,7 +283,7 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
         row = layout.row(align=True)
         row.prop(context.scene, 'unfurl_channel')
 
-classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers)
+classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles)
 
 def register():
 
