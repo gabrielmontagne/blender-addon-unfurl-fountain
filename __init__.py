@@ -314,7 +314,27 @@ class UNFURL_FOUNTAIN_OT_specific_to_strips(bpy.types.Operator):
 
         return {"FINISHED"}
 
+class UNFURL_FOUNTAIN_OT_delete_scenes_from_strips(bpy.types.Operator):
+    '''Delete all the scenes from the selected scene strips'''
+    bl_idname = 'unfurl.delete_scenes_from_strips'
+    bl_label = 'Delete scenes from selected strips'
 
+    def execute(self, context):
+
+        window = context.window
+        current_scene = window.scene
+
+        seqs = [s for s in context.selected_sequences if s.type == 'SCENE']
+
+        for seq in seqs:
+            if seq.type != 'SCENE': continue
+
+            window.scene = seq.scene
+            bpy.ops.scene.delete()
+
+        window.scene = current_scene
+
+        return {'FINISHED'}
 
 
 class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
@@ -335,7 +355,11 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
         row = layout.row(align=True)
         row.prop(context.scene, 'unfurl_channel')
 
-classes = (UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips)
+
+
+
+
+classes = (UNFURL_FOUNTAIN_OT_delete_scenes_from_strips, UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips)
 
 def register():
 
