@@ -4,7 +4,7 @@ from collections import namedtuple
 from math import ceil
 from pathlib import Path
 from shlex import split
-from subprocess import run
+from subprocess import run, PIPE
 import os
 import re
 import sys
@@ -191,6 +191,34 @@ class UNFURL_FOUNTAIN_OT_match_strip_titles(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class UNFURL_FOUNTAIN_OT_echo_title_to_strip(bpy.types.Operator):
+    '''Echo title to selected strips (from makefile)'''
+    bl_idname = "unfurl.echo_title_to_strip"
+    bl_label = "Replace text with echo title from makefile"
+
+    def execute(self, context):
+        title = run(['make', 'echo-title'], stdout=PIPE).stdout.decode('utf-8').strip()
+        if context.selected_sequences:
+            for s in context.selected_sequences:
+                if s.type != 'TEXT': continue
+                s.text = title
+
+        return {'FINISHED'}
+
+class UNFURL_FOUNTAIN_OT_echo_ddate_to_strip(bpy.types.Operator):
+    '''Echo discordian date to selected strips (from makefile)'''
+    bl_idname = "unfurl.echo_ddate_to_strip"
+    bl_label = "Replace text with echo discordian date from makefile"
+
+    def execute(self, context):
+        ddate = run(['make', 'echo-ddate'], stdout=PIPE).stdout.decode('utf-8').strip()
+        if context.selected_sequences:
+            for s in context.selected_sequences:
+                if s.type != 'TEXT': continue
+                s.text = ddate
+
+        return {'FINISHED'}
+
 
 class UNFURL_FOUNTAIN_OT_concatenate_text_strips(bpy.types.Operator):
     '''The text strip from the text strips'''
@@ -359,7 +387,7 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
 
 
 
-classes = (UNFURL_FOUNTAIN_OT_delete_scenes_from_strips, UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips)
+classes = (UNFURL_FOUNTAIN_OT_delete_scenes_from_strips, UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips, UNFURL_FOUNTAIN_OT_echo_title_to_strip, UNFURL_FOUNTAIN_OT_echo_ddate_to_strip)
 
 def register():
 
