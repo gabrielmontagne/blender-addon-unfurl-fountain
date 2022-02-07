@@ -355,7 +355,9 @@ class UNFURL_FOUNTAIN_OT_delete_scenes_from_strips(bpy.types.Operator):
         seqs = [s for s in context.selected_sequences if s.type == 'SCENE']
 
         for seq in seqs:
-            if seq.type != 'SCENE': continue
+
+            # scene was deleted from another sequence
+            if not seq.scene: continue
 
             window.scene = seq.scene
             bpy.ops.scene.delete()
