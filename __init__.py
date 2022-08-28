@@ -187,7 +187,6 @@ class UNFURL_FOUNTAIN_OT_match_strip_titles(bpy.types.Operator):
             for s in context.selected_sequences:
                 if s.type != 'TEXT': continue
                 s.name = re.sub(r'\.', '_', s.text)
-                print('text seq', s.name)
 
         return {'FINISHED'}
 
@@ -310,9 +309,16 @@ class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
     def execute(self, context):
 
         script = bpy.context.area.spaces.active.text.as_string()
-        if script.strip() == "": return {"CANCELLED"}
+        if script.strip() == "": 
+            self.report({"ERROR"}, "No text in script.")
+            return {"CANCELLED"}
 
         scenes = to_scenes(script)
+
+        if not scenes:
+            self.report({"ERROR"}, "No scenes in fountain - Do you have valid headers?")
+            return {"CANCELLED"}
+
         lay_out_scenes(scenes)
 
         return {"FINISHED"}
