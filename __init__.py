@@ -218,6 +218,26 @@ class UNFURL_FOUNTAIN_OT_echo_ddate_to_strip(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class UNFURL_REPLACE_TEXT_OT_replace_text_for_strip(bpy.types.Operator):
+
+    '''Replace selected text on text strip'''
+    bl_idname = "unfurl.replace_selected_text"
+    bl_label = "Replace text with new text"
+
+    new_text: StringProperty(name='text for strip', default='NOTE')
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_sequence_strip and context.active_sequence_strip.type == 'TEXT'
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def execute(self, context): 
+        context.active_sequence_strip.text = self.new_text
+        return {'FINISHED'}
+
 
 class UNFURL_FOUNTAIN_OT_concatenate_text_strips(bpy.types.Operator):
     '''The text strip from the text strips'''
@@ -395,7 +415,7 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
 
 
 
-classes = (UNFURL_FOUNTAIN_OT_delete_scenes_from_strips, UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips, UNFURL_FOUNTAIN_OT_echo_title_to_strip, UNFURL_FOUNTAIN_OT_echo_ddate_to_strip)
+classes = (UNFURL_FOUNTAIN_OT_delete_scenes_from_strips, UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips, UNFURL_FOUNTAIN_OT_echo_title_to_strip, UNFURL_FOUNTAIN_OT_echo_ddate_to_strip, UNFURL_REPLACE_TEXT_OT_replace_text_for_strip)
 
 def register():
 
