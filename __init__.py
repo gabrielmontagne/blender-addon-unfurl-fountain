@@ -277,7 +277,7 @@ class UNFURL_FOUNTAIN_OT_strips_to_markers(bpy.types.Operator):
         selected_frames = {s.frame_start for s in context.selected_sequences}
         timeline_markers = context.scene.timeline_markers
         for frame in selected_frames:
-            timeline_markers.new(name='F_{}'.format(frame), frame=frame)
+            timeline_markers.new(name=f'F_{frame}', frame=int(frame))
 
         return {'FINISHED'}
     
