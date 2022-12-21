@@ -1,18 +1,24 @@
 """Based on code by tin2tin, https://github.com/tin2tin/Blender_Screenwriter"""
 
+from bpy.props import StringProperty, BoolProperty
+from bpy.types import Operator
+from bpy.utils import register_class, unregister_class
 from collections import namedtuple
 from math import ceil
+from math import ceil, sqrt
 from pathlib import Path
 from shlex import split
 from subprocess import run, PIPE
+import bpy
+import logging
 import os
 import re
 import sys
-import bpy
 
 from bpy.path import abspath
 from bpy.props import IntProperty, StringProperty, BoolProperty
 from bpy.types import SequenceEditor, Scene
+
 
 bl_info = {
     'name': 'Unfurl Fountain to VSE text strips',
@@ -39,6 +45,56 @@ scene_padding_seconds = 1
 Scene = namedtuple('Scene', ['name', 'elements'])
 Dialogue = namedtuple('Dialogue', ['seconds', 'character', 'parenthetical', 'text'])
 Action = namedtuple('Action', ['seconds', 'text'])
+
+card_width = 600
+card_height = 300
+card_margin = 50
+
+def to_frames_scenes(script):
+
+    Scene = namedtuple('Scene', ['name', 'beats'])
+    Beat = namedtuple('Beat', ['name', 'lines'])
+
+    F = Fountain(script)
+
+    scenes = []
+
+    current_scene = None
+
+    current_scene = None
+    current_beat = None
+
+    for fc, f in enumerate(F.elements):
+        element_type = f.element_type
+        text = f.element_text.strip()
+
+        if element_type == 'Scene Heading':
+
+            name = f.original_content.strip()
+            current_scene = Scene(name, [])
+            scenes.append(current_scene)
+            current_beat = None
+
+        elif not current_scene:
+            continue
+
+        elif element_type == 'Section Heading':
+            if f.section_depth < 2:
+                continue
+
+            current_beat = Beat(text, [])
+            current_scene.beats.append(current_beat)
+
+        elif element_type == 'Empty Line' and not current_beat:
+            continue
+
+        else:
+            if not current_beat:
+                current_beat = Beat('', [])
+                current_scene.beats.append(current_beat)
+            current_beat.lines.append(text)
+
+    return scenes
 
 def text_to_seconds(text):
     words = len(spaces.split(text))
@@ -74,7 +130,7 @@ def seconds_to_frames(seconds):
     render = bpy.context.scene.render
     return ceil((render.fps / render.fps_base) * seconds)
 
-def to_scenes(script):
+def to_vse_scenes(script):
     F = Fountain(script)
     scenes = []
 
@@ -177,7 +233,7 @@ def create_strip(channel, start, end, text):
     strip.blend_type = 'ALPHA_OVER'
     return strip
 
-class UNFURL_FOUNTAIN_OT_match_strip_titles(bpy.types.Operator):
+class UNFURL_FOUNTAIN_OT_match_strip_titles(Operator):
     '''Match the text strip titles to their contents'''
     bl_idname = "unfurl.match_strip_titles"
     bl_label = "Match text strip titles to their contents"
@@ -190,7 +246,7 @@ class UNFURL_FOUNTAIN_OT_match_strip_titles(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class UNFURL_FOUNTAIN_OT_echo_title_to_strip(bpy.types.Operator):
+class UNFURL_FOUNTAIN_OT_echo_title_to_strip(Operator):
     '''Echo title to selected strips (from makefile)'''
     bl_idname = "unfurl.echo_title_to_strip"
     bl_label = "Replace text with echo title from makefile"
@@ -204,7 +260,7 @@ class UNFURL_FOUNTAIN_OT_echo_title_to_strip(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class UNFURL_FOUNTAIN_OT_echo_ddate_to_strip(bpy.types.Operator):
+class UNFURL_FOUNTAIN_OT_echo_ddate_to_strip(Operator):
     '''Echo discordian date to selected strips (from makefile)'''
     bl_idname = "unfurl.echo_ddate_to_strip"
     bl_label = "Replace text with echo discordian date from makefile"
@@ -218,7 +274,7 @@ class UNFURL_FOUNTAIN_OT_echo_ddate_to_strip(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class UNFURL_REPLACE_TEXT_OT_replace_text_for_strip(bpy.types.Operator):
+class UNFURL_REPLACE_TEXT_OT_replace_text_for_strip(Operator):
 
     '''Replace selected text on text strip'''
     bl_idname = "unfurl.replace_selected_text"
@@ -239,7 +295,7 @@ class UNFURL_REPLACE_TEXT_OT_replace_text_for_strip(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class UNFURL_FOUNTAIN_OT_concatenate_text_strips(bpy.types.Operator):
+class UNFURL_FOUNTAIN_OT_concatenate_text_strips(Operator):
     '''The text strip from the text strips'''
     bl_idname = "unfurl.concatenate_text_strips"
     bl_label = "Concatenate text strips"
@@ -288,7 +344,7 @@ class UNFURL_FOUNTAIN_OT_concatenate_text_strips(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class UNFURL_FOUNTAIN_OT_strips_to_markers(bpy.types.Operator):
+class UNFURL_FOUNTAIN_OT_strips_to_markers(Operator):
     '''Mark timeline from strips'''
     bl_idname = "unfurl.strips_to_markers"
     bl_label = "Mark timeline from strips"
@@ -301,7 +357,7 @@ class UNFURL_FOUNTAIN_OT_strips_to_markers(bpy.types.Operator):
 
         return {'FINISHED'}
     
-class UNFURL_FOUNTAIN_OT_clear_markers(bpy.types.Operator):
+class UNFURL_FOUNTAIN_OT_clear_markers(Operator):
     '''Mark timeline from strips'''
     bl_idname = "unfurl.clear_markers"
     bl_label = "Clear timeline markers"
@@ -311,7 +367,7 @@ class UNFURL_FOUNTAIN_OT_clear_markers(bpy.types.Operator):
         return { 'FINISHED' }
 
 
-class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
+class UNFURL_FOUNTAIN_OT_to_strips(Operator):
     '''Unfurl foutain to text strips'''
     bl_idname = "unfurl.fountain_to_strips"
     bl_label = "Unfurl foutain to strips"
@@ -333,7 +389,7 @@ class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
             self.report({"ERROR"}, "No text in script.")
             return {"CANCELLED"}
 
-        scenes = to_scenes(script)
+        scenes = to_vse_scenes(script)
 
         if not scenes:
             self.report({"ERROR"}, "No scenes in fountain - Do you have valid headers?")
@@ -343,7 +399,7 @@ class UNFURL_FOUNTAIN_OT_to_strips(bpy.types.Operator):
 
         return {"FINISHED"}
 
-class UNFURL_FOUNTAIN_OT_specific_to_strips(bpy.types.Operator):
+class UNFURL_FOUNTAIN_OT_specific_to_strips(Operator):
     '''Unfurl specific foutain to text strips'''
     bl_idname = "unfurl.fountain_specific_to_strips"
     bl_label = "Unfurl specific foutain to strips"
@@ -363,12 +419,12 @@ class UNFURL_FOUNTAIN_OT_specific_to_strips(bpy.types.Operator):
         script = file.as_string()
         if script.strip() == "": return {"CANCELLED"}
 
-        scenes = to_scenes(script)
+        scenes = to_vse_scenes(script)
         lay_out_scenes(scenes)
 
         return {"FINISHED"}
 
-class UNFURL_FOUNTAIN_OT_delete_scenes_from_strips(bpy.types.Operator):
+class UNFURL_FOUNTAIN_OT_delete_scenes_from_strips(Operator):
     '''Delete all the scenes from the selected scene strips'''
     bl_idname = 'unfurl.delete_scenes_from_strips'
     bl_label = 'Delete scenes from selected strips'
@@ -393,6 +449,71 @@ class UNFURL_FOUNTAIN_OT_delete_scenes_from_strips(bpy.types.Operator):
         return {'FINISHED'}
 
 
+
+class NODE_OP_frames_from_fountain(Operator):
+    bl_idname = 'rojored.frames_from_fountain'
+    bl_label = 'Create frames from fountain'
+
+    from_file: StringProperty(name='File')
+    clear_tree: BoolProperty(name='Clear tree', default=False)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "clear_tree")
+        layout.prop_search(self, "from_file", bpy.data, 'texts')
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    @classmethod
+    def poll(cls, context):
+        return context.area.type == 'NODE_EDITOR'
+
+    def execute(self, context):
+        if not self.from_file:
+            return {'CANCELLED'}
+
+        text = bpy.data.texts.get(self.from_file)
+        tree = context.space_data.node_tree
+
+        if self.clear_tree:
+            tree.nodes.clear()
+
+        scenes = to_frames_scenes(text.as_string())
+        side = ceil(sqrt(len(scenes)))
+
+        rows = [0 for _ in range(side)]
+
+        for i, scene in enumerate(scenes):
+            bpy.ops.node.add_node(type='NodeFrame')
+            scene_node = context.active_node
+            scene_node.label = scene.name
+            scene_node.use_custom_color = True
+            scene_node.color = (0.0, 0.0, 0.3)
+
+            column = i // side
+
+            for j, beat in enumerate(scene.beats):
+                bpy.ops.node.add_node(type='NodeFrame')
+                beat_node = context.active_node
+                beat_node.use_custom_color = True
+                beat_node.color = (0.0, 0.3, 0.0)
+                beat_node.shrink = False
+                beat_node.width = card_width
+                beat_node.height = card_height
+                beat_node.location.x += (i // side) * (card_width + card_margin * 4)
+                beat_node.location.y -=  rows[column] * (card_height + card_margin) + (i % side * card_margin)
+                beat_node.label = beat.name
+                beat_node.parent = scene_node
+
+                rows[column] += 1
+
+                text = bpy.data.texts.new(beat.name)
+                text.write('\n'.join(beat.lines))
+                beat_node.text = text
+
+        return {'FINISHED'}
 class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
     """Unfurl fountain controls"""
     bl_label = "Unfurl fountain"
@@ -415,7 +536,7 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
 
 
 
-classes = (UNFURL_FOUNTAIN_OT_delete_scenes_from_strips, UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips, UNFURL_FOUNTAIN_OT_echo_title_to_strip, UNFURL_FOUNTAIN_OT_echo_ddate_to_strip, UNFURL_REPLACE_TEXT_OT_replace_text_for_strip)
+classes = (UNFURL_FOUNTAIN_OT_delete_scenes_from_strips, UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips, UNFURL_FOUNTAIN_OT_echo_title_to_strip, UNFURL_FOUNTAIN_OT_echo_ddate_to_strip, UNFURL_REPLACE_TEXT_OT_replace_text_for_strip, NODE_OP_frames_from_fountain)
 
 def register():
 
