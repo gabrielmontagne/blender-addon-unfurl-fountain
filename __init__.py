@@ -4,7 +4,6 @@ from bpy.props import StringProperty, BoolProperty
 from bpy.types import Operator
 from bpy.utils import register_class, unregister_class
 from collections import namedtuple
-from math import ceil
 from math import ceil, sqrt
 from pathlib import Path
 from shlex import split
@@ -33,7 +32,6 @@ internal_blend = re.compile('\w+\.blend')
 current_dir = os.path.dirname(internal_blend.split(__file__)[0])
 sys.path.append(current_dir)
 
-from fountain import Fountain
 
 spaces = re.compile(r'\s+')
 words_per_second = 3.75
@@ -43,14 +41,17 @@ line_break_seconds = 0.3
 scene_padding_seconds = 1
 
 Scene = namedtuple('Scene', ['name', 'elements'])
-Dialogue = namedtuple('Dialogue', ['seconds', 'character', 'parenthetical', 'text'])
+Dialogue = namedtuple(
+    'Dialogue', ['seconds', 'character', 'parenthetical', 'text'])
 Action = namedtuple('Action', ['seconds', 'text'])
 
 card_width = 600
 card_height = 300
 card_margin = 50
 
+
 def to_frames_scenes(script):
+    from fountain import Fountain
 
     Scene = namedtuple('Scene', ['name', 'beats'])
     Beat = namedtuple('Beat', ['name', 'lines'])
@@ -96,9 +97,11 @@ def to_frames_scenes(script):
 
     return scenes
 
+
 def text_to_seconds(text):
     words = len(spaces.split(text))
     return max(min_text_length, round(words / words_per_second + line_break_seconds * text.count('\n'), 2))
+
 
 def find_empty_channel():
     context = bpy.context
@@ -113,7 +116,8 @@ def find_empty_channel():
 
     if unfurl_channel > 0:
         if sequences:
-            ss = [s for s in sequences if s.channel >= unfurl_channel and s.channel <= unfurl_channel + 2]
+            ss = [s for s in sequences if s.channel >=
+                  unfurl_channel and s.channel <= unfurl_channel + 2]
             for s in ss:
                 sequences.remove(s)
 
@@ -126,11 +130,16 @@ def find_empty_channel():
     channels = sorted(list(set(channels)))
     return channels[-1] + 1
 
+
 def seconds_to_frames(seconds):
     render = bpy.context.scene.render
     return ceil((render.fps / render.fps_base) * seconds)
 
+
 def to_vse_scenes(script):
+
+    from fountain import Fountain
+
     F = Fountain(script)
     scenes = []
 
@@ -160,11 +169,11 @@ def to_vse_scenes(script):
             seconds = text_to_seconds(text) * text_speed_factor
             current_scene.elements.append(
                 Dialogue(
-                seconds,
-                current_char,
-                current_parenthetical,
-                text
-            ))
+                    seconds,
+                    current_char,
+                    current_parenthetical,
+                    text
+                ))
             current_parenthetical = ''
 
         elif current_scene and element_type == 'Action':
@@ -172,6 +181,7 @@ def to_vse_scenes(script):
             current_scene.elements.append(Action(seconds, text))
 
     return scenes
+
 
 def lay_out_scenes(scenes):
     next = 0
@@ -199,7 +209,8 @@ def lay_out_scenes(scenes):
                 strip.align_y = 'BOTTOM'
 
             elif element_type is Action:
-                strip = create_strip(channel + 2, start + next, end + next, e.text)
+                strip = create_strip(channel + 2, start +
+                                     next, end + next, e.text)
                 strip.location.y = 0.5
                 strip.align_y = 'CENTER'
 
@@ -212,6 +223,7 @@ def lay_out_scenes(scenes):
         strip.location.y = 0.9
         strip.align_y = 'TOP'
         next = end
+
 
 def create_strip(channel, start, end, text):
     frame_start = seconds_to_frames(start)
@@ -227,11 +239,12 @@ def create_strip(channel, start, end, text):
 
     strip.font_size = int(bpy.context.scene.render.resolution_y/18)
     strip.use_shadow = True
-    strip.select= True
+    strip.select = True
     strip.wrap_width = 0.85
     strip.text = text
     strip.blend_type = 'ALPHA_OVER'
     return strip
+
 
 class UNFURL_FOUNTAIN_OT_match_strip_titles(Operator):
     '''Match the text strip titles to their contents'''
@@ -241,10 +254,12 @@ class UNFURL_FOUNTAIN_OT_match_strip_titles(Operator):
     def execute(self, context):
         if context.selected_sequences:
             for s in context.selected_sequences:
-                if s.type != 'TEXT': continue
+                if s.type != 'TEXT':
+                    continue
                 s.name = re.sub(r'\.', '_', s.text)
 
         return {'FINISHED'}
+
 
 class UNFURL_FOUNTAIN_OT_echo_title_to_strip(Operator):
     '''Echo title to selected strips (from makefile)'''
@@ -252,13 +267,16 @@ class UNFURL_FOUNTAIN_OT_echo_title_to_strip(Operator):
     bl_label = "Replace text with echo title from makefile"
 
     def execute(self, context):
-        title = run(['make', 'echo-title'], stdout=PIPE).stdout.decode('utf-8').strip()
+        title = run(['make', 'echo-title'],
+                    stdout=PIPE).stdout.decode('utf-8').strip()
         if context.selected_sequences:
             for s in context.selected_sequences:
-                if s.type != 'TEXT': continue
+                if s.type != 'TEXT':
+                    continue
                 s.text = title
 
         return {'FINISHED'}
+
 
 class UNFURL_FOUNTAIN_OT_echo_ddate_to_strip(Operator):
     '''Echo discordian date to selected strips (from makefile)'''
@@ -266,13 +284,16 @@ class UNFURL_FOUNTAIN_OT_echo_ddate_to_strip(Operator):
     bl_label = "Replace text with echo discordian date from makefile"
 
     def execute(self, context):
-        ddate = run(['make', 'echo-ddate'], stdout=PIPE).stdout.decode('utf-8').strip()
+        ddate = run(['make', 'echo-ddate'],
+                    stdout=PIPE).stdout.decode('utf-8').strip()
         if context.selected_sequences:
             for s in context.selected_sequences:
-                if s.type != 'TEXT': continue
+                if s.type != 'TEXT':
+                    continue
                 s.text = ddate
 
         return {'FINISHED'}
+
 
 class UNFURL_REPLACE_TEXT_OT_replace_text_for_strip(Operator):
 
@@ -290,7 +311,7 @@ class UNFURL_REPLACE_TEXT_OT_replace_text_for_strip(Operator):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
-    def execute(self, context): 
+    def execute(self, context):
         context.active_sequence_strip.text = self.new_text
         return {'FINISHED'}
 
@@ -301,7 +322,8 @@ class UNFURL_FOUNTAIN_OT_concatenate_text_strips(Operator):
     bl_label = "Concatenate text strips"
 
     save_target: BoolProperty(name='Save target', default=True)
-    split_dialogues: BoolProperty(name='Split fountain dialogues', default=True)
+    split_dialogues: BoolProperty(
+        name='Split fountain dialogues', default=True)
     target: StringProperty(name='To file')
     shell_command: StringProperty(name='Command')
     shell_context: StringProperty(name='CWD', default='//', subtype='DIR_PATH')
@@ -314,7 +336,8 @@ class UNFURL_FOUNTAIN_OT_concatenate_text_strips(Operator):
         result = []
         if context.selected_sequences:
             for s in sorted(context.selected_sequences, key=lambda s: (s.frame_final_start, s.channel)):
-                if s.type != 'TEXT': continue
+                if s.type != 'TEXT':
+                    continue
                 text = s.text
                 if self.split_dialogues and re.match(r'^[A-Z ]+:', text):
                     text = '\n'.join([s.strip() for s in text.split(':', 1)])
@@ -356,7 +379,8 @@ class UNFURL_FOUNTAIN_OT_strips_to_markers(Operator):
             timeline_markers.new(name=f'F_{frame}', frame=int(frame))
 
         return {'FINISHED'}
-    
+
+
 class UNFURL_FOUNTAIN_OT_clear_markers(Operator):
     '''Mark timeline from strips'''
     bl_idname = "unfurl.clear_markers"
@@ -364,7 +388,7 @@ class UNFURL_FOUNTAIN_OT_clear_markers(Operator):
 
     def execute(self, context):
         context.scene.timeline_markers.clear()
-        return { 'FINISHED' }
+        return {'FINISHED'}
 
 
 class UNFURL_FOUNTAIN_OT_to_strips(Operator):
@@ -377,27 +401,31 @@ class UNFURL_FOUNTAIN_OT_to_strips(Operator):
         space = bpy.context.space_data
         try:
             filepath = space.text.name
-            if filepath.strip() == "": return False
+            if filepath.strip() == "":
+                return False
             return ((space.type == 'TEXT_EDITOR')
                     and Path(filepath).suffix == ".fountain")
-        except AttributeError: return False
+        except AttributeError:
+            return False
 
     def execute(self, context):
 
         script = bpy.context.area.spaces.active.text.as_string()
-        if script.strip() == "": 
+        if script.strip() == "":
             self.report({"ERROR"}, "No text in script.")
             return {"CANCELLED"}
 
         scenes = to_vse_scenes(script)
 
         if not scenes:
-            self.report({"ERROR"}, "No scenes in fountain - Do you have valid headers?")
+            self.report(
+                {"ERROR"}, "No scenes in fountain - Do you have valid headers?")
             return {"CANCELLED"}
 
         lay_out_scenes(scenes)
 
         return {"FINISHED"}
+
 
 class UNFURL_FOUNTAIN_OT_specific_to_strips(Operator):
     '''Unfurl specific foutain to text strips'''
@@ -408,21 +436,23 @@ class UNFURL_FOUNTAIN_OT_specific_to_strips(Operator):
 
     def execute(self, context):
 
-        if not self.text: return {"CANCELLED"}
+        if not self.text:
+            return {"CANCELLED"}
 
         file = bpy.data.texts.get(self.text)
 
         if not file:
             return {"CANCELLED"}
 
-
         script = file.as_string()
-        if script.strip() == "": return {"CANCELLED"}
+        if script.strip() == "":
+            return {"CANCELLED"}
 
         scenes = to_vse_scenes(script)
         lay_out_scenes(scenes)
 
         return {"FINISHED"}
+
 
 class UNFURL_FOUNTAIN_OT_delete_scenes_from_strips(Operator):
     '''Delete all the scenes from the selected scene strips'''
@@ -439,7 +469,8 @@ class UNFURL_FOUNTAIN_OT_delete_scenes_from_strips(Operator):
         for seq in seqs:
 
             # scene was deleted from another sequence
-            if not seq.scene: continue
+            if not seq.scene:
+                continue
 
             window.scene = seq.scene
             bpy.ops.scene.delete()
@@ -449,9 +480,8 @@ class UNFURL_FOUNTAIN_OT_delete_scenes_from_strips(Operator):
         return {'FINISHED'}
 
 
-
 class NODE_OP_frames_from_fountain(Operator):
-    bl_idname = 'rojored.frames_from_fountain'
+    bl_idname = 'unfurl.frames_from_fountain'
     bl_label = 'Create frames from fountain'
 
     from_file: StringProperty(name='File')
@@ -502,8 +532,10 @@ class NODE_OP_frames_from_fountain(Operator):
                 beat_node.shrink = False
                 beat_node.width = card_width
                 beat_node.height = card_height
-                beat_node.location.x += (i // side) * (card_width + card_margin * 4)
-                beat_node.location.y -=  rows[column] * (card_height + card_margin) + (i % side * card_margin)
+                beat_node.location.x += (i // side) * \
+                    (card_width + card_margin * 4)
+                beat_node.location.y -= rows[column] * \
+                    (card_height + card_margin) + (i % side * card_margin)
                 beat_node.label = beat.name
                 beat_node.parent = scene_node
 
@@ -514,6 +546,8 @@ class NODE_OP_frames_from_fountain(Operator):
                 beat_node.text = text
 
         return {'FINISHED'}
+
+
 class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
     """Unfurl fountain controls"""
     bl_label = "Unfurl fountain"
@@ -533,26 +567,24 @@ class UNFURL_FOUNTAIN_PT_panel(bpy.types.Panel):
         row.prop(context.scene, 'unfurl_channel')
 
 
+classes = (UNFURL_FOUNTAIN_OT_delete_scenes_from_strips, UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers,
+           UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips, UNFURL_FOUNTAIN_OT_echo_title_to_strip, UNFURL_FOUNTAIN_OT_echo_ddate_to_strip, UNFURL_REPLACE_TEXT_OT_replace_text_for_strip, NODE_OP_frames_from_fountain)
 
-
-
-classes = (UNFURL_FOUNTAIN_OT_delete_scenes_from_strips, UNFURL_FOUNTAIN_PT_panel, UNFURL_FOUNTAIN_OT_to_strips, UNFURL_FOUNTAIN_OT_specific_to_strips, UNFURL_FOUNTAIN_OT_strips_to_markers, UNFURL_FOUNTAIN_OT_clear_markers, UNFURL_FOUNTAIN_OT_match_strip_titles, UNFURL_FOUNTAIN_OT_concatenate_text_strips, UNFURL_FOUNTAIN_OT_echo_title_to_strip, UNFURL_FOUNTAIN_OT_echo_ddate_to_strip, UNFURL_REPLACE_TEXT_OT_replace_text_for_strip, NODE_OP_frames_from_fountain)
 
 def register():
 
     bpy.types.Scene.unfurl_channel = bpy.props.IntProperty(default=0, min=0)
 
     from bpy.utils import register_class
-    for cls in classes :
+    for cls in classes:
         register_class(cls)
-
-
 
 
 def unregister():
     from bpy.utils import unregister_class
-    for cls in classes :
+    for cls in classes:
         unregister_class(cls)
+
 
 if __name__ == '__main__':
     register()
