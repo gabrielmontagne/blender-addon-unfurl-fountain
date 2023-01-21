@@ -370,7 +370,7 @@ class UNFURL_FOUNTAIN_OT_strips_to_markers(Operator):
     bl_label = "Mark timeline from strips"
 
     def execute(self, context):
-        selected_frames = {s.frame_start for s in context.selected_sequences}
+        selected_frames = {s.frame_final_start for s in context.selected_sequences}
         timeline_markers = context.scene.timeline_markers
         for frame in selected_frames:
             timeline_markers.new(name=f'F_{frame}', frame=int(frame))
