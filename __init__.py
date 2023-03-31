@@ -20,7 +20,7 @@ from bpy.types import SequenceEditor, Scene
 
 
 bl_info = {
-    'name': 'Unfurl Fountain to VSE text strips',
+    'name': 'Unfurl Fountain to VSE text strips and Frames',
     'author': 'gabriel montagné, gabriel@tibas.london',
     'version': (0, 0, 1),
     'blender': (2, 80, 0),
