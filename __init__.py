@@ -80,6 +80,9 @@ def to_frames_scenes(script):
             continue
 
         elif element_type == 'Section Heading':
+            if f.section_depth < 2:
+                continue
+
             current_beat = Beat(text, [])
             current_scene.beats.append(current_beat)
 
