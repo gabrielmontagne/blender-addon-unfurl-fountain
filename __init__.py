@@ -86,6 +86,10 @@ def to_frames_scenes(script):
             current_beat = Beat(text, [])
             current_scene.beats.append(current_beat)
 
+        elif element_type == 'Synopsis':
+            current_beat = Beat(text, [])
+            current_scene.beats.append(current_beat)
+
         elif element_type == 'Empty Line' and not current_beat:
             continue
 
